@@ -127,16 +127,24 @@ internal static class TrayIconMethods
 
     public static unsafe bool TryModifyToolTip(
         Guid id,
-        string toolTip)
+        string toolTip,
+        bool useStandardTooltip)
     {
+        var uFlags =
+            NOTIFY_ICON_DATA_FLAGS.NIF_TIP |
+            NOTIFY_ICON_DATA_FLAGS.NIF_GUID;
+
+        if (useStandardTooltip)
+        {
+            uFlags |= NOTIFY_ICON_DATA_FLAGS.NIF_SHOWTIP;
+        }
+
         if (Environment.Is64BitProcess)
         {
             var data = new NOTIFYICONDATAW64
             {
                 cbSize = (uint)sizeof(NOTIFYICONDATAW64),
-                uFlags =
-                    NOTIFY_ICON_DATA_FLAGS.NIF_TIP |
-                    NOTIFY_ICON_DATA_FLAGS.NIF_GUID,
+                uFlags = uFlags,
                 guidItem = id,
             };
             toolTip.SetTo(&data.szTip._0, data.szTip.Length);
@@ -148,9 +156,7 @@ internal static class TrayIconMethods
             var data = new NOTIFYICONDATAW32
             {
                 cbSize = (uint)sizeof(NOTIFYICONDATAW32),
-                uFlags =
-                    NOTIFY_ICON_DATA_FLAGS.NIF_TIP |
-                    NOTIFY_ICON_DATA_FLAGS.NIF_GUID,
+                uFlags = uFlags,
                 guidItem = id,
             };
             toolTip.SetTo(&data.szTip._0, data.szTip.Length);
@@ -161,16 +167,24 @@ internal static class TrayIconMethods
 
     public static unsafe bool TryModifyIcon(
         Guid id,
-        nint iconHandle)
+        nint iconHandle,
+        bool useStandardTooltip)
     {
+        var uFlags =
+            NOTIFY_ICON_DATA_FLAGS.NIF_ICON |
+            NOTIFY_ICON_DATA_FLAGS.NIF_GUID;
+
+        if (useStandardTooltip)
+        {
+            uFlags |= NOTIFY_ICON_DATA_FLAGS.NIF_SHOWTIP;
+        }
+
         if (Environment.Is64BitProcess)
         {
             var data = new NOTIFYICONDATAW64
             {
                 cbSize = (uint)sizeof(NOTIFYICONDATAW64),
-                uFlags =
-                    NOTIFY_ICON_DATA_FLAGS.NIF_ICON |
-                    NOTIFY_ICON_DATA_FLAGS.NIF_GUID,
+                uFlags = uFlags,
                 guidItem = id,
                 hIcon = new HICON(iconHandle),
             };
@@ -182,9 +196,7 @@ internal static class TrayIconMethods
             var data = new NOTIFYICONDATAW32
             {
                 cbSize = (uint)sizeof(NOTIFYICONDATAW32),
-                uFlags =
-                    NOTIFY_ICON_DATA_FLAGS.NIF_ICON |
-                    NOTIFY_ICON_DATA_FLAGS.NIF_GUID,
+                uFlags = uFlags,
                 guidItem = id,
                 hIcon = new HICON(iconHandle),
             };
@@ -195,16 +207,24 @@ internal static class TrayIconMethods
 
     public static unsafe bool TryModifyState(
         Guid id,
-        uint state)
+        uint state,
+        bool useStandardTooltip)
     {
+        var uFlags =
+            NOTIFY_ICON_DATA_FLAGS.NIF_STATE |
+            NOTIFY_ICON_DATA_FLAGS.NIF_GUID;
+
+        if (useStandardTooltip)
+        {
+            uFlags |= NOTIFY_ICON_DATA_FLAGS.NIF_SHOWTIP;
+        }
+
         if (Environment.Is64BitProcess)
         {
             var data = new NOTIFYICONDATAW64
             {
                 cbSize = (uint)sizeof(NOTIFYICONDATAW64),
-                uFlags =
-                    NOTIFY_ICON_DATA_FLAGS.NIF_STATE |
-                    NOTIFY_ICON_DATA_FLAGS.NIF_GUID,
+                uFlags = uFlags,
                 guidItem = id,
                 dwState = state,
                 dwStateMask = (uint)NOTIFY_ICON_STATE.NIS_HIDDEN,
@@ -217,9 +237,7 @@ internal static class TrayIconMethods
             var data = new NOTIFYICONDATAW32
             {
                 cbSize = (uint)sizeof(NOTIFYICONDATAW32),
-                uFlags =
-                    NOTIFY_ICON_DATA_FLAGS.NIF_STATE |
-                    NOTIFY_ICON_DATA_FLAGS.NIF_GUID,
+                uFlags = uFlags,
                 guidItem = id,
                 dwState = state,
                 dwStateMask = (uint)NOTIFY_ICON_STATE.NIS_HIDDEN,
@@ -311,14 +329,22 @@ internal static class TrayIconMethods
 
     public static unsafe bool TrySetVersion(
         Guid id,
-        IconVersion version)
+        IconVersion version,
+        bool useStandardTooltip)
     {
+        var uFlags = NOTIFY_ICON_DATA_FLAGS.NIF_GUID;
+
+        if (useStandardTooltip)
+        {
+            uFlags |= NOTIFY_ICON_DATA_FLAGS.NIF_SHOWTIP;
+        }
+
         if (Environment.Is64BitProcess)
         {
             var data = new NOTIFYICONDATAW64
             {
                 cbSize = (uint)sizeof(NOTIFYICONDATAW64),
-                uFlags = NOTIFY_ICON_DATA_FLAGS.NIF_GUID,
+                uFlags = uFlags,
                 guidItem = id,
                 Anonymous =
                 {
@@ -333,7 +359,7 @@ internal static class TrayIconMethods
             var data = new NOTIFYICONDATAW32
             {
                 cbSize = (uint)sizeof(NOTIFYICONDATAW32),
-                uFlags = NOTIFY_ICON_DATA_FLAGS.NIF_GUID,
+                uFlags = uFlags,
                 guidItem = id,
                 Anonymous =
                 {
@@ -347,38 +373,49 @@ internal static class TrayIconMethods
 
     public static bool TrySetMostRecentVersion(
         Guid id,
+        bool useStandardTooltip,
         out IconVersion version)
     {
         version = IconVersion.Vista;
         var status = TrySetVersion(
             id: id,
-            version: version);
+            version: version,
+            useStandardTooltip);
         if (!status)
         {
             version = IconVersion.Win2000;
             status = TrySetVersion(
                 id: id,
-                version: version);
+                version: version,
+                useStandardTooltip);
         }
         if (!status)
         {
             version = IconVersion.Win95;
             status = TrySetVersion(
                 id: id,
-                version: version);
+                version: version,
+                useStandardTooltip);
         }
 
         return status;
     }
 
-    public static unsafe bool TrySetFocus(Guid id)
+    public static unsafe bool TrySetFocus(Guid id, bool useStandardTooltip)
     {
+        var uFlags = NOTIFY_ICON_DATA_FLAGS.NIF_GUID;
+
+        if (useStandardTooltip)
+        {
+            uFlags |= NOTIFY_ICON_DATA_FLAGS.NIF_SHOWTIP;
+        }
+
         if (Environment.Is64BitProcess)
         {
             var data = new NOTIFYICONDATAW64
             {
                 cbSize = (uint)sizeof(NOTIFYICONDATAW64),
-                uFlags = NOTIFY_ICON_DATA_FLAGS.NIF_GUID,
+                uFlags = uFlags,
                 guidItem = id,
             };
 
@@ -389,7 +426,7 @@ internal static class TrayIconMethods
             var data = new NOTIFYICONDATAW32
             {
                 cbSize = (uint)sizeof(NOTIFYICONDATAW32),
-                uFlags = NOTIFY_ICON_DATA_FLAGS.NIF_GUID,
+                uFlags = uFlags,
                 guidItem = id,
             };
 

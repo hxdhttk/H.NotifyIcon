@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using EventGenerator;
 #if MACOS
 using CoreFoundation;
@@ -136,7 +136,7 @@ public partial class TrayIcon : IDisposable
     /// pop-up UI. If the application wants to show the standard tooltip with NOTIFYICON_VERSION_4, 
     /// it can specify NIF_SHOWTIP to indicate the standard tooltip should still be shown.
     /// </summary>
-    public bool UseStandardTooltip { get; set; }
+    public bool UseStandardTooltip { get; set; } = true;
 
 #endif
     
@@ -326,12 +326,13 @@ public partial class TrayIcon : IDisposable
 
         if (!TrayIconMethods.TrySetMostRecentVersion(
             id: Id,
+            UseStandardTooltip,
             out var version))
         {
             throw new InvalidOperationException($"{nameof(TrayIconMethods.TrySetMostRecentVersion)} failed.");
         }
         if (Visibility == IconVisibility.Visible &&
-            !TrayIconMethods.TryModifyState(Id, (uint)Visibility))
+            !TrayIconMethods.TryModifyState(Id, (uint)Visibility, UseStandardTooltip))
         {
             throw new InvalidOperationException($"{nameof(TrayIconMethods.TryModifyState)} failed.");
         }
@@ -436,7 +437,7 @@ public partial class TrayIcon : IDisposable
         }
 
 #if !MACOS
-        if (!TrayIconMethods.TryModifyToolTip(Id, text))
+        if (!TrayIconMethods.TryModifyToolTip(Id, text, UseStandardTooltip))
         {
             throw new InvalidOperationException("UpdateToolTip failed.");
         }
@@ -463,7 +464,7 @@ public partial class TrayIcon : IDisposable
             return;
         }
 
-        if (!TrayIconMethods.TryModifyIcon(Id, handle))
+        if (!TrayIconMethods.TryModifyIcon(Id, handle, UseStandardTooltip))
         {
             throw new InvalidOperationException("UpdateIcon failed.");
         }
@@ -489,7 +490,7 @@ public partial class TrayIcon : IDisposable
         }
 
 #if !MACOS
-        if (!TrayIconMethods.TryModifyState(Id, (uint)visibility))
+        if (!TrayIconMethods.TryModifyState(Id, (uint)visibility, UseStandardTooltip))
         {
             throw new InvalidOperationException("UpdateState failed.");
         }
@@ -582,6 +583,10 @@ public partial class TrayIcon : IDisposable
         {
             additionalFlags |= NOTIFY_ICON_DATA_FLAGS.NIF_REALTIME;
         }
+        if(UseStandardTooltip)
+        {
+            additionalFlags |= NOTIFY_ICON_DATA_FLAGS.NIF_SHOWTIP;
+        }
 
         var infoFlags = customIconHandle != null
             ? NOTIFY_ICON_INFOTIP_FLAGS.NIIF_USER
@@ -654,7 +659,7 @@ public partial class TrayIcon : IDisposable
         EnsureNotDisposed();
         EnsureCreated();
 
-        if (!TrayIconMethods.TrySetFocus(Id))
+        if (!TrayIconMethods.TrySetFocus(Id, UseStandardTooltip))
         {
             throw new InvalidOperationException("SetFocus failed.");
         }
